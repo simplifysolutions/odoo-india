@@ -22,6 +22,7 @@
 {
     'name' : 'Indian Localization',
     'version' : '1.0',
+    'price': 399,
     'author' : 'OpenERP SA',
     'sequence': 110,
     'category': 'Indian Localization',
