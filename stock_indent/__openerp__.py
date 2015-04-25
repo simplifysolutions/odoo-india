@@ -53,7 +53,7 @@ A store manager or will create a repairing indent when the product is needed to 
 
 A purchase order is generated for the service taken for the supplier who repairs the product, and an internal move has been created for the product to be moved for repairing.
 """,
-    'depends' : ['l10n_in_base', 'stock', 'purchase', 'product_container'],
+    'depends' : ['stock', 'purchase', 'product_container'],
     'data' : [
         'stock_indent_view.xml',
         'stock_indent_workflow.xml',
