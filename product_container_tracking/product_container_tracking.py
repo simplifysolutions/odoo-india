@@ -36,29 +36,24 @@ class stock_picking(osv.Model):
     _inherit = "stock.picking"
     _table = "stock_picking"
     _order = "name desc"
-    
+
     def do_partial(self, cr, uid, ids, partial_datas, context=None):
         move_pool = self.pool.get('stock.move')
-        warehouse_pool = self.pool.get('stock.warehouse')
         serial_pool = self.pool.get('stock.production.lot')
-        
+
         res = super(stock_picking, self).do_partial(cr, uid, ids, partial_datas, context=context)
-        
+
         package_serial_entry = {}
-        
+
         for picking_id in res:
             picking = self.browse(cr, uid, picking_id)
             for move in picking.move_lines:
-                
                 if move.product_id.container_id and move.product_id.container_id.track_outgoing and not move.prodlot_id:
                     raise osv.except_osv(_('Warning!'),_('You cannot confirm shipping for %s with container %s, without serial number' % (move.name, move.product_id.container_id.name)))
-                
                 if move.product_packaging and not move.product_packaging.ul.container_id:
                     raise osv.except_osv(_('Warning!'),_('Please define container product on package %s' % (move.product_packaging.ul.name)))
-                
                 if move.product_packaging and (not move.prodlot_id or not move.tracking_id):
                     raise osv.except_osv(_('Warning!'),_('You cannot confirm an shipping %s with container %s, without serial number' % (move.name, move.product_packaging.ul.container_id.id)))
-                
                 if move.product_id.container_id and move.prodlot_id:
                     serial_id = False
                     if not move.prodlot_id.container_serial_id:
@@ -66,17 +61,17 @@ class stock_picking(osv.Model):
                         if serial_ids:
                             serial_id = serial_ids[0]
                         else:
-                            res = {
+                            move_data = {
                                 'name':move.prodlot_id.name,
                                 'product_id':move.product_id.container_id.id,
                                 'date':time.strftime('%Y-%m-%d %H:%M:%S')
                             }
-                            serial_id = serial_pool.create(cr, uid, res)
+                            serial_id = serial_pool.create(cr, uid, move_data)
                         serial_pool.write(cr, uid, [move.prodlot_id.id], {'container_serial_id':serial_id})
                     else:
                         serial_id = move.prodlot_id.container_serial_id.id
                     
-                    res = {
+                    move_data = {
                         'product_id':move.product_id.container_id.id,
                         'product_qty':1,
                         'product_uom':move.product_id.container_id.uom_id.id,
@@ -90,7 +85,7 @@ class stock_picking(osv.Model):
                         'prodlot_id':serial_id,
                         'state':'done'
                     }
-                    move_pool.create(cr, uid, res)
+                    move_pool.create(cr, uid, move_data)
                 elif not move.product_id.container_id and move.prodlot_id and move.tracking_id and move.product_packaging:
                     serial_id = False
                     if not move.prodlot_id.container_serial_id:
@@ -98,18 +93,18 @@ class stock_picking(osv.Model):
                         if serial_ids:
                             serial_id = serial_ids[0]
                         else:
-                            res = {
+                            move_data = {
                                 'name':move.tracking_id.name,
                                 'product_id':move.product_packaging.ul.container_id.id,
                                 'date':time.strftime('%Y-%m-%d %H:%M:%S')
                             }
-                            serial_id = serial_pool.create(cr, uid, res)
+                            serial_id = serial_pool.create(cr, uid, move_data)
                         serial_pool.write(cr, uid, [move.prodlot_id.id], {'container_serial_id':serial_id})
                     else:
                         serial_id = move.prodlot_id.container_serial_id.id
                     
                     if not package_serial_entry.get(serial_id):
-                        res = {
+                        move_data = {
                             'product_id':move.product_packaging.ul.container_id.id,
                             'product_qty':1,
                             'product_uom':move.product_packaging.ul.container_id.uom_id.id,
@@ -123,7 +118,7 @@ class stock_picking(osv.Model):
                             'prodlot_id':serial_id,
                             'state':'done'
                         }
-                        package_serial_entry[serial_id] = move_pool.create(cr, uid, res)
+                        package_serial_entry[serial_id] = move_pool.create(cr, uid, move_data)
         return res
     
 stock_picking()
