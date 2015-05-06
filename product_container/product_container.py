@@ -28,8 +28,8 @@ class product_ul(osv.osv):
         'container_id' : fields.many2one('product.product', 'Container Product', domain=[('container_ok','=',True)]),
     }
 
-class product_product(osv.Model):
-    _inherit = 'product.product'
+class product_template(osv.Model):
+    _inherit = 'product.template'
  
     _columns = {
         'container_ok': fields.boolean('Container', help='Select this if the product will act as a container to carry other products.'),
